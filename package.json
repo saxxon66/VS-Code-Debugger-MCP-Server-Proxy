@@ -1,0 +1,32 @@
+{
+  "name": "vscode-debugger-mcp-server-proxy",
+  "version": "0.1.0",
+  "description": "A proxy to bridge stdio MCP communication to a WebSocket MCP server for the VS Code Debugger.",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc -w & nodemon dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "proxy",
+    "vscode",
+    "debugger",
+    "websocket",
+    "stdio"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/ws": "^8.5.0",
+    "nodemon": "^3.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.13.2",
+    "ws": "^8.10.0"
+  },
+  "type": "module"
+}
