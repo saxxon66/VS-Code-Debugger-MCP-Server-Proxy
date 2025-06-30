@@ -1,11 +1,14 @@
+
 import WebSocket from 'ws';
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
-import { JSONRPCMessage, JSONRPCRequest, JSONRPCResponse, ListToolsResult, Tool } from '@modelcontextprotocol/sdk/types.js';
-// @ts-ignore
-import { serializeMessage } from '@modelcontextprotocol/sdk/shared/stdio.js';
 
-const LOG_FILE_PATH = 'D:/Projekte/MCP/vscode-debugger-mcp-server-proxy/proxy.log';
+const LOG_DIR = path.join(os.homedir(), '.vscode-debugger-mcp-server');
+if (!fs.existsSync(LOG_DIR)) {
+  fs.mkdirSync(LOG_DIR, { recursive: true });
+}
+const LOG_FILE_PATH = path.join(LOG_DIR, 'proxy.log');
 
 function logMessage(message: string, toFileOnly: boolean = false): void {
   const timestamp = new Date().toISOString();
@@ -26,7 +29,17 @@ logMessage(`[Proxy] Script started. PID: ${process.pid}. Logging to: ${LOG_FILE_
 
 const VSCODE_DEBUGGER_WS_URL = 'ws://localhost:12345'; // Updated to match MCP server's actual port
 
-let currentWs: WebSocket | null = null;
+// Disable stdout buffering to ensure real-time message delivery to the client.
+// This is critical for interactive stdio-based communication.
+if (process.stdout.isTTY) {
+  process.stdout.setEncoding('utf8');
+} else {
+  // When not a TTY, it's likely a pipe, which is buffered by default.
+  // Disabling buffering is essential for our use case.
+  (process.stdout as any)._handle.setBlocking(true);
+}
+ 
+ let currentWs: WebSocket | null = null;
 let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = 10;
 const RECONNECT_INTERVAL_MS = 5000; // 5 seconds
@@ -103,46 +116,7 @@ async function connect() {
     const messageString = data.toString();
     logMessage(`[Proxy] ws -> stdout: ${messageString.substring(0, 200)}${messageString.length > 200 ? '...' : ''}`);
 
-    try {
-      const parsedMessage: JSONRPCMessage = JSON.parse(messageString);
-
-      // Check if it's a tools/call request for list_tools
-      // Type guard to check if it's a JSON-RPC request
-      // Type guard to check if it's a JSON-RPC request
-      // Type guard to check if it's a JSON-RPC request
-      // Type guard to check if it's a JSON-RPC request
-      if ('method' in parsedMessage && (parsedMessage as JSONRPCRequest).method === 'tools/call' && (parsedMessage as JSONRPCRequest).params && ((parsedMessage as JSONRPCRequest).params as any).name === 'list_tools') {
-        logMessage('[Proxy] Intercepted tools/call for list_tools. Sending dummy response.');
-
-        const dummyTools: Tool[] = [
-          {
-            name: "dummyTool",
-            description: "A test tool from the proxy.",
-            inputSchema: { type: "object", properties: {} },
-          },
-        ];
-
-        const listToolsResponse: JSONRPCResponse = {
-          jsonrpc: '2.0',
-          id: (parsedMessage as JSONRPCRequest).id, // Ensure the ID matches the request
-          result: {
-            description: "Tools available from the proxy.",
-            tools: dummyTools
-          } as ListToolsResult
-        };
-
-        const serializedResponse = serializeMessage(listToolsResponse);
-        logMessage(`[Proxy] Sending serialized list_tools response: ${serializedResponse.substring(0, 200)}${serializedResponse.length > 200 ? '...' : ''}`);
-        process.stdout.write(serializedResponse + '\n');
-        return; // Do not fall through to original forwarding logic
-      }
-    } catch (e) {
-      logMessage(`[Proxy] Error parsing WebSocket message as JSON or handling list_tools: ${e instanceof Error ? e.message : String(e)}`, true);
-      // If parsing fails, or it's not a list_tools call, fall through to original forwarding
-    }
-
     // The MCP SDK's StdioServerTransport expects simple newline-delimited JSON messages.
-    // Remove LSP-like headers and ensure only JSON + newline is sent.
     process.stdout.write(messageString + '\n');
   });
 
