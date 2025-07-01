@@ -27,7 +27,19 @@ function logMessage(message: string, toFileOnly: boolean = false): void {
 
 logMessage(`[Proxy] Script started. PID: ${process.pid}. Logging to: ${LOG_FILE_PATH}`);
 
-const VSCODE_DEBUGGER_WS_URL = 'ws://localhost:12345'; // Updated to match MCP server's actual port
+const settingsPath = path.join(process.cwd(), '.vscode', 'settings.json');
+let port = 12345; // fallback default
+if (fs.existsSync(settingsPath)) {
+  try {
+    const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+    if (settings.vscodeDebuggerMCP && typeof settings.vscodeDebuggerMCP.websocketPort === 'number') {
+      port = settings.vscodeDebuggerMCP.websocketPort;
+    }
+  } catch (e) {
+    logMessage(`[Proxy] Failed to parse .vscode/settings.json: ${e}`);
+  }
+}
+const VSCODE_DEBUGGER_WS_URL = `ws://localhost:${port}`; // Dynamically set from project settings
 
 // Disable stdout buffering to ensure real-time message delivery to the client.
 // This is critical for interactive stdio-based communication.
