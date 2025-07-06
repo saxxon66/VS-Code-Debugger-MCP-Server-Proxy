@@ -49,12 +49,22 @@ function logMessage(message: string, toFileOnly: boolean = false): void {
 logMessage(`[Proxy] Script started. PID: ${process.pid}. Logging to: ${LOG_FILE_PATH}`);
 
 /**
- * Determine the WebSocket port from .vscode/settings.json if available,
- * otherwise use the default port 10101.
+ * Determine the WebSocket port:
+ * 1. If --port or -p argument is provided, use it.
+ * 2. Else, read from .vscode/settings.json if available.
+ * 3. Otherwise, use the default port 10101.
  */
 const settingsPath = path.join(process.cwd(), '.vscode', 'settings.json');
 let port = 10101; // fallback default
-if (fs.existsSync(settingsPath)) {
+
+// Check for --port or -p argument
+const portArgIndex = process.argv.findIndex(arg => arg === '--port' || arg === '-p');
+if (portArgIndex !== -1 && process.argv[portArgIndex + 1]) {
+  const argPort = parseInt(process.argv[portArgIndex + 1], 10);
+  if (!isNaN(argPort)) {
+    port = argPort;
+  }
+} else if (fs.existsSync(settingsPath)) {
   try {
     const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
     if (settings.vscodeDebuggerMCP && typeof settings.vscodeDebuggerMCP.websocketPort === 'number') {
@@ -64,7 +74,7 @@ if (fs.existsSync(settingsPath)) {
     logMessage(`[Proxy] Failed to parse .vscode/settings.json: ${e}`);
   }
 }
-const VSCODE_DEBUGGER_WS_URL = `ws://localhost:${port}`; // Dynamically set from project settings
+const VSCODE_DEBUGGER_WS_URL = `ws://localhost:${port}`; // Dynamically set from CLI or project settings
 
 // Disable stdout buffering to ensure real-time message delivery to the client.
 // This is critical for interactive stdio-based communication.

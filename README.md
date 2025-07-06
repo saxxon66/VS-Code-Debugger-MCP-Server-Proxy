@@ -76,7 +76,9 @@ Add the following to your Roo Code settings:
     "vscode-debugger": {
       "command": "node",
       "args": [
-        "d:/Projekte/MCP/vscode-debugger-mcp-server-proxy/dist/index.js"
+        "d:/Projekte/MCP/vscode-debugger-mcp-server-proxy/dist/index.js", 
+        "-p",  
+        "10101"
       ],
       "env": {
         "DEBUG": "false"
@@ -89,6 +91,8 @@ Add the following to your Roo Code settings:
 ```
 
 **Important:** Make sure the path in the `args` array is the absolute path to the compiled `index.js` file on your system.
+
+**Note:** The port number (`10101` in the example above) must match the port configured and **Transport Type** is set to `websocket` in the VS Code Debugger MCP Server extension settings. Ensure both the proxy and the extension are set to use the same port for successful communication.
 
 ---
 
