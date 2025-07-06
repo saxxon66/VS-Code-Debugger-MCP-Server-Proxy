@@ -6,7 +6,7 @@ This proxy acts as a bridge, enabling AI assistants that communicate via `stdio`
 
 ## Why Use This Proxy?
 
-This tool is essential if your AI assistant, such as Roo Code, does not support direct `HTTP` or `SSE` connections and requires a `stdio`-based server to interact with the VS Code debugger. It translates the `stdio` communication from your AI tool into a format the main debugger extension can understand.
+This tool is essential if your AI assistant does not support direct `HTTP` or `SSE` connections and requires a `stdio`-based server to interact with the VS Code debugger. It translates the `stdio` communication from your AI tool into a format the main debugger extension can understand.
 
 ---
 
